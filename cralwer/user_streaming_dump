@@ -10,8 +10,6 @@ use AnyEvent::Twitter::Stream;
 
 my $configs = Config::Any->load_stems( { stems => [qw{crawler crawler_local}], use_ext => 1 } );
 my ($used_configfile, $config) = %{$configs->[-1]};
-warn Dumper($config);
-warn $config->{twitter}{consumer_key};
 
 while(1){
     my $cv = AE::cv {
