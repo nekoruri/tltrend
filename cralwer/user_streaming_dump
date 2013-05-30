@@ -1,0 +1,40 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Config::Any;
+use Data::Dumper 'Dumper';
+
+use AnyEvent::Twitter::Stream;
+
+my $configs = Config::Any->load_stems( { stems => [qw{crawler crawler_local}], use_ext => 1 } );
+my ($used_configfile, $config) = %{$configs->[-1]};
+warn Dumper($config);
+warn $config->{twitter}{consumer_key};
+
+while(1){
+    my $cv = AE::cv {
+        warn "Connection closed. Retring.\n";
+    };
+
+    my $stream = AnyEvent::Twitter::Stream->new(
+        consumer_key    => $config->{twitter}{consumer_key},
+        consumer_secret => $config->{twitter}{consumer_secret},
+        token           => $config->{twitter}{token},
+        token_secret    => $config->{twitter}{token_secret},
+        request_method => 'POST',
+        method          => "userstream",
+        timeout         => 15,
+        on_timeout      => sub { warn "Timeout\n"; },
+        on_connect      => sub { warn "Connected\n"; },
+        on_tweet        => sub {
+            my $tweet = shift;
+            print Dumper($tweet);
+        },
+    );
+
+    warn "Connecting to Twitter\n";
+    $cv->recv;
+}
+
